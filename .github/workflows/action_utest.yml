@@ -134,8 +134,8 @@ jobs:
           print "utest"
         fi
         sleep 5
-        print "tail rtt log"
+        echo "tail rtt log"
         tail -f rtt_console.log
-        print "cat rtt log"
+        echo "cat rtt log"
         cat rtt_console.log
         # popd
