@@ -15,7 +15,7 @@ on:
       - '**/README_zh.md'
   pull_request:
     branches:
-      - master
+      - patch-2
     paths-ignore:
       - documentation/**
       - '**/README.md'
@@ -28,7 +28,7 @@ jobs:
   test:
     runs-on: ubuntu-22.04
     name: ${{ matrix.legs.UTEST }}
-    if: github.repository_owner == 'RT-Thread'
+    if: github.repository_owner == 'KurisaW-Collaborative'
     strategy:
       fail-fast: false
       matrix:
