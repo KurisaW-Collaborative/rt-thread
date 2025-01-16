@@ -125,7 +125,7 @@ jobs:
       run: |
         if [ $TEST_SD_FILE != "None" ]; then
           echo "Starting QEMU with sd file: $TEST_SD_FILE"
-          qemu-system-arm -nographic -M vexpress-a9 -kernel -elf $TEST_BSP_ROOT/rtthread.bin -sd $TEST_BSP_ROOT/$TEST_SD_FILE > rtt_console.log 2>&1 &
+          qemu-system-arm -nographic -M vexpress-a9 -kernel --elf ../$TEST_BSP_ROOT/rtthread.bin --sd ../$TEST_BSP_ROOT/$TEST_SD_FILE > rtt_console.log 2>&1 &
           echo "QEMU started, waiting for log output..."
           # python3 qemu_runner.py --system $TEST_QEMU_ARCH --machine $TEST_QEMU_MACHINE --elf ../$TEST_BSP_ROOT/rtthread.bin --sd ../$TEST_BSP_ROOT/$TEST_SD_FILE
         else
