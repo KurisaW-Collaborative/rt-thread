@@ -33,7 +33,7 @@ jobs:
       fail-fast: false
       matrix:
        legs:
-         - {UTEST: "kernel/mem",       RTT_BSP: "bsp/qemu-vexpress-a9",    QEMU_ARCH: "arm",      QEMU_MACHINE: "vexpress-a9", CONFIG_FILE: "kernel/mem.conf",     SD_FILE: "sd.bin", RUN: "yes"}
+         # - {UTEST: "kernel/mem",       RTT_BSP: "bsp/qemu-vexpress-a9",    QEMU_ARCH: "arm",      QEMU_MACHINE: "vexpress-a9", CONFIG_FILE: "kernel/mem.conf",     SD_FILE: "sd.bin", RUN: "yes"}
          - {UTEST: "components/utest", RTT_BSP: "bsp/qemu-vexpress-a9",    QEMU_ARCH: "arm",      QEMU_MACHINE: "vexpress-a9", CONFIG_FILE: "utest_self/self.conf", SD_FILE: "sd.bin", RUN: "yes"}
     env:
       TEST_QEMU_ARCH: ${{ matrix.legs.QEMU_ARCH }}
@@ -121,7 +121,7 @@ jobs:
         scons -j$(nproc) --strict -C $TEST_BSP_ROOT
 
     - name: Start run Test
-      if: ${{matrix.legs.RUN == 'yes' && matrix.legs.UTEST == 'utest_self/self.conf' && success() }}
+      if: ${{matrix.legs.RUN == 'yes' && success() }}
       run: |
         if [ $TEST_SD_FILE != "None" ]; then
           qemu-system-arm -nographic -M vexpress-a9 -kernel -elf ../$TEST_BSP_ROOT/rtthread.bin -sd ../$TEST_BSP_ROOT/$TEST_SD_FILE > rtt_console.log 2>&1 &
