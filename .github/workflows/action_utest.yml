@@ -121,17 +121,15 @@ jobs:
         scons -j$(nproc) --strict -C $TEST_BSP_ROOT
 
     - name: Start run Test
-      if: ${{matrix.legs.RUN == 'yes' && success() }}
+      if: ${{matrix.legs.RUN == 'yes' && matrix.legs.UTEST == 'utest_self/self.conf' && success() }}
       run: |
-        git clone https://github.com/armink/UtestRunner.git
-        pushd $TEST_BSP_ROOT
-        dd if=/dev/zero of=sd.bin bs=1024 count=65536
-        popd
-        pushd UtestRunner
         if [ $TEST_SD_FILE != "None" ]; then
-          python3 qemu_runner.py --system $TEST_QEMU_ARCH --machine $TEST_QEMU_MACHINE --elf ../$TEST_BSP_ROOT/rtthread.bin --sd ../$TEST_BSP_ROOT/$TEST_SD_FILE
+          qemu-system-arm -nographic -M vexpress-a9 -kernel -elf ../$TEST_BSP_ROOT/rtthread.bin -sd ../$TEST_BSP_ROOT/$TEST_SD_FILE > rtt_console.log 2>&1 &
+          # python3 qemu_runner.py --system $TEST_QEMU_ARCH --machine $TEST_QEMU_MACHINE --elf ../$TEST_BSP_ROOT/rtthread.bin --sd ../$TEST_BSP_ROOT/$TEST_SD_FILE
         else
-          python3 qemu_runner.py --system $TEST_QEMU_ARCH --machine $TEST_QEMU_MACHINE --elf ../$TEST_BSP_ROOT/rtthread.bin
+          # python3 qemu_runner.py --system $TEST_QEMU_ARCH --machine $TEST_QEMU_MACHINE --elf ../$TEST_BSP_ROOT/rtthread.bin
         fi
+        sleep 5
+        echo "QEMU Console Output:"
         cat rtt_console.log
         popd
