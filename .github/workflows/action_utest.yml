@@ -129,6 +129,8 @@ jobs:
           popd
           echo "Starting QEMU with sd file: $TEST_SD_FILE"
           qemu-system-arm -nographic -M vexpress-a9 -kernel ../$TEST_BSP_ROOT/rtthread.bin -sd ../$TEST_BSP_ROOT/$TEST_SD_FILE &> rtt_console.log &
+          qemu-system-arm -nographic -M vexpress-a9 -kernel ../$TEST_BSP_ROOT/rtthread.bin -sd ../$TEST_BSP_ROOT/$TEST_SD_FILE &> rtt_console.log 
+          wait $!
           echo "QEMU started, waiting for log output..."
           # python3 qemu_runner.py --system $TEST_QEMU_ARCH --machine $TEST_QEMU_MACHINE --elf ../$TEST_BSP_ROOT/rtthread.bin --sd ../$TEST_BSP_ROOT/$TEST_SD_FILE
         else
