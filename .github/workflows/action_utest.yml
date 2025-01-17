@@ -124,14 +124,15 @@ jobs:
     - name: Start run Test
       if: ${{matrix.legs.RUN == 'yes' && success() }}
       run: |
-        dd if=/dev/zero of=bsp/qemu-vexpress-a9/sd.bin bs=1024 count=65536
-        cd bsp/qemu-vexpress-a9
-        ./qemu-nographic.sh
-
-        # 等待直到 qemu 输出特定的字符串表示 utest 结束
-        tail -f qemu_output.log | while read line; do
-          if [[ "$line" == *"[I/utest] [==========] [ utest    ] finished"* ]]; then
-            kill $(pgrep qemu)  # 当检测到该输出时停止 QEMU
-            break
-          fi
-        done
+        git clone https://github.com/armink/UtestRunner.git
+        pushd $TEST_BSP_ROOT
+        dd if=/dev/zero of=sd.bin bs=1024 count=65536
+        popd
+        pushd UtestRunner
+        if [ $TEST_SD_FILE != "None" ]; then
+          python3 qemu_runner.py --system $TEST_QEMU_ARCH --machine $TEST_QEMU_MACHINE --elf ../$TEST_BSP_ROOT/rtthread.bin --sd ../$TEST_BSP_ROOT/$TEST_SD_FILE
+        else
+          python3 qemu_runner.py --system $TEST_QEMU_ARCH --machine $TEST_QEMU_MACHINE --elf ../$TEST_BSP_ROOT/rtthread.bin
+        fi
+        cat rtt_console.log
+        popd
