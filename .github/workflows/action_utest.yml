@@ -144,7 +144,7 @@ jobs:
     - name: Monitor log for failures and qemu end
       run: |
         echo "Monitoring logs for failures and qemu end..."
-
+    
         FAILURE_DETECTED=false
         ERROR_LOGS=""
         
@@ -154,7 +154,7 @@ jobs:
             echo "$line"
             FAILURE_DETECTED=true
           fi
-
+    
           if [[ "$line" == *"[==========] [ utest    ] end"* ]]; then
             echo "Utest run completed. Exiting log monitoring..."
             if $FAILURE_DETECTED; then
@@ -164,3 +164,4 @@ jobs:
             fi
             break
           fi
+        done
