@@ -50,6 +50,7 @@ jobs:
         sudo apt-get update
         sudo apt-get -yqq install scons qemu-system git
         pip3 install kconfiglib
+        sudo apt-get install -y expect
 
     - name: Install Arm ToolChains
       if: ${{ matrix.legs.QEMU_ARCH == 'arm' && matrix.legs.UTEST != 'rtsmart/arm' && success() }}
@@ -126,3 +127,11 @@ jobs:
         dd if=/dev/zero of=bsp/qemu-vexpress-a9/sd.bin bs=1024 count=65536
         cd bsp/qemu-vexpress-a9
         ./qemu-nographic.sh
+
+        # 等待直到 qemu 输出特定的字符串表示 utest 结束
+        tail -f qemu_output.log | while read line; do
+          if [[ "$line" == *"[I/utest] [==========] [ utest    ] finished"* ]]; then
+            kill $(pgrep qemu)  # 当检测到该输出时停止 QEMU
+            break
+          fi
+        done
