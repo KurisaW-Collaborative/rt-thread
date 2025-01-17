@@ -139,8 +139,16 @@ jobs:
         dd if=/dev/zero of=bsp/qemu-vexpress-a9/sd.bin bs=1024 count=65536
         qemu-system-arm -M $TEST_QEMU_MACHINE -smp cpus=2 -kernel bsp/qemu-vexpress-a9/rtthread.bin -nographic -sd bsp/qemu-vexpress-a9/sd.bin > qemu_output.log 2>&1 &
         QEMU_PID=$!
+        disown $QEMU_PID
 
-        sleep 10
-        kill $QEMU_PID
-        echo "start log read"
-        cat qemu_output.log
+    - name: Monitor log to kill qemu
+      run: |
+        tail -f qemu_output.log | while read line; do
+          echo "$line"
+          if [[ "$line" == *"qemu end"* ]]; then
+            echo "Found keyword, stopping qemu..."
+            cat qemu_output.log
+            kill $QEMU_PID
+            break
+          fi
+        done
