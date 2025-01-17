@@ -126,6 +126,9 @@ jobs:
       run: |
         echo $TEST_BSP_ROOT/$TEST_SD_FILE
         dd if=/dev/zero of=bsp/qemu-vexpress-a9/sd.bin bs=1024 count=65536
-        qemu-system-arm -M $TEST_QEMU_MACHINE -smp cpus=2 -kernel bsp/qemu-vexpress-a9/rtthread.bin -nographic -sd bsp/qemu-vexpress-a9/sd.bin > qemu_output.log 2>&1
+        qemu-system-arm -M $TEST_QEMU_MACHINE -smp cpus=2 -kernel bsp/qemu-vexpress-a9/rtthread.bin -nographic -sd bsp/qemu-vexpress-a9/sd.bin > qemu_output.log 2>&1 &
+        QEMU_PID=$!
+        sleep 20
+        kill $QEMU_PID
         echo "start log read"
         cat qemu_output.log
