@@ -120,6 +120,14 @@ jobs:
         scons --pyconfig-silent -C $TEST_BSP_ROOT
         scons -j$(nproc) --strict -C $TEST_BSP_ROOT
 
+    - name: Prepare SD Card Image
+      run: |
+        # Ensure the directory exists
+        # Check if sd.bin exists, if not, create it with dd
+        if [ ! -f "bsp/qemu-vexpress-a9/sd.bin" ]; then
+          dd if=/dev/zero of=bsp/qemu-vexpress-a9/sd.bin bs=1024 count=65536
+        fi
+
     - name: Start run Test
       if: ${{matrix.legs.RUN == 'yes' && success() }}
       run: |
@@ -133,7 +141,6 @@ jobs:
           print "utest"
         fi
         if [ ! -f "sd.bin" ]; then
-        dd if=/dev/zero of=sd.bin bs=1024 count=65536
         fi
         sleep 5
         ls -l
