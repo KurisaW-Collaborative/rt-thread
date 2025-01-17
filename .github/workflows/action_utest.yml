@@ -120,20 +120,15 @@ jobs:
         scons --pyconfig-silent -C $TEST_BSP_ROOT
         scons -j$(nproc) --strict -C $TEST_BSP_ROOT
 
-    - name: Prepare SD Card Image
-      run: |
-        # Ensure the directory exists
-        # Check if sd.bin exists, if not, create it with dd
-        if [ ! -f "bsp/qemu-vexpress-a9/sd.bin" ]; then
-          dd if=/dev/zero of=bsp/qemu-vexpress-a9/sd.bin bs=1024 count=65536
-        fi
-
     - name: Start run Test
       if: ${{matrix.legs.RUN == 'yes' && success() }}
       run: |
         if [ $TEST_SD_FILE != "None" ]; then
+          pushd $TEST_BSP_ROOT
+          dd if=/dev/zero of=sd.bin bs=1024 count=65536
+          popd
           echo "Starting QEMU with sd file: $TEST_SD_FILE"
-          qemu-system-arm -nographic -M vexpress-a9 -kernel bsp/qemu-vexpress-a9/rtthread.elf -sd bsp/qemu-vexpress-a9/sd.bin &> rtt_console.log &
+          qemu-system-arm -nographic -M vexpress-a9 -kernel ../$TEST_BSP_ROOT/rtthread.bin -sd ../$TEST_BSP_ROOT/$TEST_SD_FILE &> rtt_console.log &
           echo "QEMU started, waiting for log output..."
           # python3 qemu_runner.py --system $TEST_QEMU_ARCH --machine $TEST_QEMU_MACHINE --elf ../$TEST_BSP_ROOT/rtthread.bin --sd ../$TEST_BSP_ROOT/$TEST_SD_FILE
         else
