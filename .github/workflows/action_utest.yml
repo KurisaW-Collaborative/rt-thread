@@ -145,7 +145,7 @@ jobs:
       run: |
         tail -f qemu_output.log | while read line; do
           echo "$line"
-          if [[ "$line" == *"qemu end"* ]]; then
+          if [[ "$line" == *"[==========] [ utest    ] end"* ]]; then
             echo "Found keyword, stopping qemu..."
             cat qemu_output.log
             kill $QEMU_PID
