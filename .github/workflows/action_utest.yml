@@ -136,4 +136,3 @@ jobs:
           print "utest"
         fi
         cat rtt_console.log
-        popd
