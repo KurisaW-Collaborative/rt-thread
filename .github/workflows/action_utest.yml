@@ -124,16 +124,11 @@ jobs:
     - name: Start run Test
       if: ${{matrix.legs.RUN == 'yes' && success() }}
       run: |
-        cd ../$TEST_BSP_ROOT
+        cd $TEST_BSP_ROOT
         echo "$TEST_QEMU_ARCH:"
         echo $TEST_QEMU_ARCH
         echo "$TEST_QEMU_MACHINE:"
         echo $TEST_QEMU_MACHINE
         
         qemu-system-arm -M vexpress-a9 -smp cpus=2 -kernel ../$TEST_BSP_ROOT -nographic -sd ../$TEST_BSP_ROOT/$TEST_SD_FILE > qemu_output.log 2>&1
-        tail -f qemu_output.log | while read line; do
-        echo "start detech error message"
-        if [[ "$line" == *"[I/utest] [==========] [ utest    ] finished"* ]]; then
-          kill $QEMU_PID  # 当检测到该输出时停止 QEMU
-          break
-        fi
+        echo qemu_output.log
