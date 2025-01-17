@@ -160,6 +160,7 @@ jobs:
               echo "Utest run completed. Exiting log monitoring..."
               break
             fi
+          break
         done
 
         if $FAILURE_DETECTED; then
