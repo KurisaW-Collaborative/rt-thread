@@ -124,15 +124,16 @@ jobs:
     - name: Start run Test
       if: ${{matrix.legs.RUN == 'yes' && success() }}
       run: |
-        git clone https://github.com/armink/UtestRunner.git
-        pushd $TEST_BSP_ROOT
-        dd if=/dev/zero of=sd.bin bs=1024 count=65536
-        popd
-        pushd UtestRunner
-        if [ $TEST_SD_FILE != "None" ]; then
-          python3 qemu_runner.py --system $TEST_QEMU_ARCH --machine $TEST_QEMU_MACHINE --elf ../$TEST_BSP_ROOT/rtthread.bin --sd ../$TEST_BSP_ROOT/$TEST_SD_FILE
-        else
-          python3 qemu_runner.py --system $TEST_QEMU_ARCH --machine $TEST_QEMU_MACHINE --elf ../$TEST_BSP_ROOT/rtthread.bin
+        cd ../$TEST_BSP_ROOT
+        echo "$TEST_QEMU_ARCH:"
+        echo $TEST_QEMU_ARCH
+        echo "$TEST_QEMU_MACHINE:"
+        echo $TEST_QEMU_MACHINE
+        
+        qemu-system-arm -M vexpress-a9 -smp cpus=2 -kernel ../$TEST_BSP_ROOT -nographic -sd ../$TEST_BSP_ROOT/$TEST_SD_FILE > qemu_output.log 2>&1
+        tail -f qemu_output.log | while read line; do
+        echo "start detech error message"
+        if [[ "$line" == *"[I/utest] [==========] [ utest    ] finished"* ]]; then
+          kill $QEMU_PID  # 当检测到该输出时停止 QEMU
+          break
         fi
-        cat rtt_console.log
-        popd
