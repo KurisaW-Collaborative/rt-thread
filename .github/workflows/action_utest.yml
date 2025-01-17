@@ -189,7 +189,7 @@ jobs:
                 echo "$ERROR_LOGS"
                 exit 1
               fi
-              break 2
+              break
             fi
           done
         done
