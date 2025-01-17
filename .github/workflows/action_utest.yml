@@ -151,7 +151,6 @@ jobs:
         tail -n 0 -f qemu_output.log | while read line; do
           if [[ "$line" == *"[  PASSED  ] [ result   ]"* ]]; then
             ERROR_LOGS="$ERROR_LOGS$line"$'\n'
-            echo "$line"
             FAILURE_DETECTED=true
           fi
     
