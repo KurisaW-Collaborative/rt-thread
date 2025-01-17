@@ -139,13 +139,7 @@ jobs:
         dd if=/dev/zero of=bsp/qemu-vexpress-a9/sd.bin bs=1024 count=65536
         qemu-system-arm -M $TEST_QEMU_MACHINE -smp cpus=2 -kernel bsp/qemu-vexpress-a9/rtthread.bin -nographic -sd bsp/qemu-vexpress-a9/sd.bin > qemu_output.log 2>&1 &
         QEMU_PID=$!
-        
-        tail -f qemu_output.log | while read line; do
-          if [[ "$line" == *"[==========] [ utest    ] end"* ]]; then
-            kill $QEMU_PID  # 当检测到该输出时停止 QEMU
-            echo "kill qemu pid"
-            break
-          fi
+
         sleep 10
         kill $QEMU_PID
         echo "start log read"
