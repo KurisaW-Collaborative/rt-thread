@@ -125,7 +125,6 @@ jobs:
       run: |
         if [ $TEST_SD_FILE != "None" ]; then
           dd if=/dev/zero of=bsp/qemu-vexpress-a9/sd.bin bs=1024 count=65536
-          popd
           echo "Starting QEMU with sd file: $TEST_SD_FILE"
           # qemu-system-arm -nographic -M vexpress-a9 -kernel ../$TEST_BSP_ROOT/rtthread.bin -sd ../$TEST_BSP_ROOT/$TEST_SD_FILE &> rtt_console.log &
           qemu-system-arm -nographic -M vexpress-a9 -kernel ../$TEST_BSP_ROOT/rtthread.bin -sd ../$TEST_BSP_ROOT/$TEST_SD_FILE -d in_asm,guest_errors &> rtt_console.log
