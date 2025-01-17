@@ -141,22 +141,30 @@ jobs:
         QEMU_PID=$!
         disown $QEMU_PID
 
-    - name: Monitor for all log
+    - name: Monitor log for failures and qemu end
       run: |
-        tail -f qemu_output.log | while read line; do
-          echo "$line"
-          if [[ "$line" == *"[==========] [ utest    ] end"* ]]; then
-            echo "Found keyword, stopping qemu..."
-            break
-          fi
-        done
+        echo "Monitoring logs for failures and qemu end..."
 
-    - name: Monitor log for fail CI
-      run: |
-        tail -f qemu_output.log | while read line; do
-          if [[ "$line" == *"[  PASSED  ] [ result   ]"* ]]; then
-            echo "Error: Found failure in log:"
-            echo "$line"
+        FAILURE_DETECTED=false
+        ERROR_LOGS=""
+        
+        while true; do
+          tail -n 0 -f qemu_output.log | while read line; do
+            if [[ "$line" == *"[  PASSED  ] [ result   ]"* ]]; then
+              ERROR_LOGS="$ERROR_LOGS$line"$'\n'
+              echo "$line"
+              FAILURE_DETECTED=true
+            fi
+
+            if [[ "$line" == *"[==========] [ utest    ] end"* ]]; then
+              echo "Utest run completed. Exiting log monitoring..."
+              break
+            fi
+          done
+
+          if $FAILURE_DETECTED; then
+            echo "Error: Failures detected in logs. Below are the failure details:"
+            echo "$ERROR_LOGS"
             exit 1
           fi
         done
