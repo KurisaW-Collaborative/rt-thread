@@ -124,7 +124,8 @@ jobs:
     - name: Start run Test
       if: ${{matrix.legs.RUN == 'yes' && success() }}
       run: |
-        dd if=/dev/zero of=$TEST_BSP_ROOT/$TEST_SD_FILE bs=1024 count=65536
-        qemu-system-arm -M $TEST_QEMU_MACHINE -smp cpus=2 -kernel $TEST_BSP_ROOT -nographic -sd $TEST_BSP_ROOT/$TEST_SD_FILE > qemu_output.log 2>&1
+        echo $TEST_BSP_ROOT/$TEST_SD_FILE
+        dd if=/dev/zero of=bsp/qemu-vexpress-a9/sd.bin bs=1024 count=65536
+        qemu-system-arm -M $TEST_QEMU_MACHINE -smp cpus=2 -kernel bsp/qemu-vexpress-a9/rtthread.bin -nographic -sd bsp/qemu-vexpress-a9/sd.bin > qemu_output.log 2>&1
         echo "start log read"
         cat qemu_output.log
