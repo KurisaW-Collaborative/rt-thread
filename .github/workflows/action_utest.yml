@@ -141,12 +141,22 @@ jobs:
         QEMU_PID=$!
         disown $QEMU_PID
 
-    - name: Monitor log to kill qemu
+    - name: Monitor for all log
       run: |
         tail -f qemu_output.log | while read line; do
           echo "$line"
           if [[ "$line" == *"[==========] [ utest    ] end"* ]]; then
             echo "Found keyword, stopping qemu..."
             break
+          fi
+        done
+
+    - name: Monitor log for fail CI
+      run: |
+        tail -f qemu_output.log | while read line; do
+          if [[ "$line" == *"[  PASSED  ] [ result   ]"* ]]; then
+            echo "Error: Found failure in log:"
+            echo "$line"
+            exit 1
           fi
         done
