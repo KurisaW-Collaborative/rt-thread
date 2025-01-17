@@ -147,7 +147,6 @@ jobs:
           echo "$line"
           if [[ "$line" == *"[==========] [ utest    ] end"* ]]; then
             echo "Found keyword, stopping qemu..."
-            cat qemu_output.log
             kill $QEMU_PID
             break
           fi
