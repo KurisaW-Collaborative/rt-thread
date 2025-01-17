@@ -166,4 +166,31 @@ jobs:
               break
             fi
         done
+
+    - name: Monitor log for failures and qemu end
+      run: |
+        echo "Monitoring logs for failures and qemu end..."
+    
+        FAILURE_DETECTED=false
+        ERROR_LOGS=""
+    
+        while true; do
+          tail -n 0 -f qemu_output.log | while read line; do
+            if [[ "$line" == *"[  PASSED  ] [ result   ]"* ]]; then
+              ERROR_LOGS="$ERROR_LOGS$line"$'\n'
+              echo "$line"
+              FAILURE_DETECTED=true
+            fi
+    
+            if [[ "$line" == *"[==========] [ utest    ] end"* ]]; then
+              echo "Utest run completed. Exiting log monitoring..."
+              if $FAILURE_DETECTED; then
+                echo "Error: Failures detected in logs. Below are the failure details:"
+                echo "$ERROR_LOGS"
+                exit 1
+              fi
+              break 2
+            fi
+          done
+        done
         
