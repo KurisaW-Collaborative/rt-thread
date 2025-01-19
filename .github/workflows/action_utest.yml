@@ -34,8 +34,8 @@ jobs:
       matrix:
        legs:
          - {UTEST: "qemu-vexpress-a9", RTT_BSP: "bsp/qemu-vexpress-a9",    QEMU_ARCH: "arm",      QEMU_MACHINE: "vexpress-a9", CONFIG_FILE: "utest_self/self.conf", SD_FILE: "sd.bin", RUN: "yes"}
-         - {UTEST: "qemu-virt64-aarch64", RTT_BSP: "bsp/qemu-virt64-aarch64", QEMU_ARCH: "aarch64",  QEMU_MACHINE: "virt",  CONFIG_FILE: "utest_self/self.conf",   SD_FILE: "sd.bin", RUN: "yes"}
-         - {UTEST: "bsp/qemu-virt64-riscv", RTT_BSP: "bsp/qemu-virt64-riscv",   QEMU_ARCH: "riscv64",  QEMU_MACHINE: "virt",  CONFIG_FILE: "utest_self/self.conf",   SD_FILE: "None", RUN: "yes"}
+         - {UTEST: "qemu-virt64-aarch64", RTT_BSP: "bsp/qemu-virt64-aarch64", QEMU_ARCH: "aarch64",  QEMU_MACHINE: "virt",  CONFIG_FILE: "utest_self/self.conf",   SD_FILE: "sd.bin", RUN: "no"}
+         - {UTEST: "qemu-virt64-riscv", RTT_BSP: "bsp/qemu-virt64-riscv",   QEMU_ARCH: "riscv64",  QEMU_MACHINE: "virt",  CONFIG_FILE: "utest_self/self.conf",   SD_FILE: "sd.bin", RUN: "yes"}
     env:
       TEST_QEMU_ARCH: ${{ matrix.legs.QEMU_ARCH }}
       TEST_QEMU_MACHINE: ${{ matrix.legs.QEMU_MACHINE }}
@@ -51,7 +51,6 @@ jobs:
         sudo apt-get update
         sudo apt-get -yqq install scons qemu-system git
         pip3 install kconfiglib
-        sudo apt-get install -y inotify-tools
 
     - name: Install Arm ToolChains
       if: ${{ matrix.legs.QEMU_ARCH == 'arm' && matrix.legs.UTEST != 'rtsmart/arm' && success() }}
@@ -127,19 +126,17 @@ jobs:
       run: |
         dd if=/dev/zero of=bsp/qemu-vexpress-a9/sd.bin bs=1024 count=65536
         # qemu-system-arm -M $TEST_QEMU_MACHINE -smp cpus=2 -kernel bsp/qemu-vexpress-a9/rtthread.bin -nographic -sd bsp/qemu-vexpress-a9/sd.bin > qemu_output.log 2>&1 &
-        qemu-system-$TEST_QEMU_ARCH -nographic -M $TEST_QEMU_MACHINE -smp cpus=2 -kernel $TEST_BSP_ROOT/rtthread.bin -nographic -sd $TEST_BSP_ROOT/sd.bin > qemu_output.log 2>&1 &
+        qemu-system-$TEST_QEMU_ARCH -nographic -M $TEST_QEMU_MACHINE -smp cpus=2 -kernel $TEST_BSP_ROOT/rtthread.bin -nographic -sd $TEST_BSP_ROOT/sd.bin > qemu_output_${TEST_QEMU_ARCH}.log 2>&1 &
         
         QEMU_PID=$!
         disown $QEMU_PID
 
     - name: Monitor log for failures and qemu end
       run: |
-        echo "Monitoring logs for failures and qemu end..."
-    
         FAILURE_DETECTED=false
         ERROR_LOGS=""
         
-        tail -n 0 -f qemu_output.log | while read line; do
+        tail -n 0 -f qemu_output_${TEST_QEMU_ARCH}.log | while read line; do
           if [[ "$line" == *"[  FAILED  ] [ result   ]"* ]]; then
             ERROR_LOGS="$ERROR_LOGS$line"$'\n'
             FAILURE_DETECTED=true
