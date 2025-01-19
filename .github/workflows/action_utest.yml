@@ -151,5 +151,5 @@ jobs:
             fi
             break
           fi
-          cat qemu_output_${TEST_QEMU_ARCH}.log
+        cat qemu_output_${TEST_QEMU_ARCH}.log
         done
