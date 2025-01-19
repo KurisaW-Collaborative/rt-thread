@@ -126,17 +126,14 @@ jobs:
       run: |
         dd if=/dev/zero of=bsp/qemu-vexpress-a9/sd.bin bs=1024 count=65536
         # qemu-system-arm -M $TEST_QEMU_MACHINE -smp cpus=2 -kernel bsp/qemu-vexpress-a9/rtthread.bin -nographic -sd bsp/qemu-vexpress-a9/sd.bin > qemu_output.log 2>&1 &
-        popd
         if [ $TEST_SD_FILE != "None" ]; then
           qemu-system-$TEST_QEMU_ARCH -nographic -M $TEST_QEMU_MACHINE -smp cpus=2 -kernel $TEST_BSP_ROOT/rtthread.bin -nographic -sd $TEST_BSP_ROOT/sd.bin > qemu_output_${TEST_QEMU_ARCH}.log 2>&1 &
         else
           qemu-system-$TEST_QEMU_ARCH -nographic -M $TEST_QEMU_MACHINE -smp cpus=2 -kernel $TEST_BSP_ROOT/rtthread.bin -nographic > qemu_output_${TEST_QEMU_ARCH}.log 2>&1 &
         fi
-        popd
 
     - name: Monitor log for failures and qemu end
       run: |
-        popd
         FAILURE_DETECTED=false
         ERROR_LOGS=""
         
@@ -155,4 +152,4 @@ jobs:
             break
           fi
           cat qemu_output_${TEST_QEMU_ARCH}.log
-        popd
+        done
