@@ -34,7 +34,7 @@ jobs:
       matrix:
        legs:
          - {UTEST: "qemu-vexpress-a9", RTT_BSP: "bsp/qemu-vexpress-a9",    QEMU_ARCH: "arm",      QEMU_MACHINE: "vexpress-a9", CONFIG_FILE: "utest_self/self.conf", SD_FILE: "sd.bin", RUN: "yes"}
-         # - {UTEST: "qemu-virt64-aarch64", RTT_BSP: "bsp/qemu-virt64-aarch64", QEMU_ARCH: "aarch64",  QEMU_MACHINE: "virt",  CONFIG_FILE: "utest_self/self.conf",   SD_FILE: "sd.bin", RUN: "no"}
+         - {UTEST: "qemu-virt64-aarch64", RTT_BSP: "bsp/qemu-virt64-aarch64", QEMU_ARCH: "aarch64",  QEMU_MACHINE: "virt",  CONFIG_FILE: "utest_self/self.conf",   SD_FILE: "sd.bin", RUN: "no"}
          - {UTEST: "qemu-virt64-riscv", RTT_BSP: "bsp/qemu-virt64-riscv",   QEMU_ARCH: "riscv64",  QEMU_MACHINE: "virt",  CONFIG_FILE: "utest_self/self.conf",   SD_FILE: "None", RUN: "yes"}
     env:
       TEST_QEMU_ARCH: ${{ matrix.legs.QEMU_ARCH }}
