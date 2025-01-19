@@ -141,7 +141,7 @@ jobs:
         
         tail -n 0 -f qemu_output_${TEST_QEMU_ARCH}.log | while read line; do
           echo $line
-          if [[ "$line" == *"[  PASSED  ] [ result   ]"* ]]; then
+          if [[ "$line" == *"[  FAILED  ] [ result   ]"* ]]; then
             ERROR_LOGS="$ERROR_LOGS$line"$'\n'
             FAILURE_DETECTED=true
           fi
