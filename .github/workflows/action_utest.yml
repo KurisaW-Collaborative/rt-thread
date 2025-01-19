@@ -132,7 +132,6 @@ jobs:
         else
           qemu-system-$TEST_QEMU_ARCH -nographic -M $TEST_QEMU_MACHINE -smp cpus=2 -kernel $TEST_BSP_ROOT/rtthread.bin -nographic > qemu_output_${TEST_QEMU_ARCH}.log 2>&1 &
         fi
-        cat qemu_output_${TEST_QEMU_ARCH}.log
 
     - name: Monitor qemu log
       if: ${{matrix.legs.RUN == 'yes' && success() }}
@@ -141,7 +140,8 @@ jobs:
         ERROR_LOGS=""
         
         tail -n 0 -f qemu_output_${TEST_QEMU_ARCH}.log | while read line; do
-          if [[ "$line" == *"[  FAILED  ] [ result   ]"* ]]; then
+          echo $line
+          if [[ "$line" == *"[  PASSED  ] [ result   ]"* ]]; then
             ERROR_LOGS="$ERROR_LOGS$line"$'\n'
             FAILURE_DETECTED=true
           fi
