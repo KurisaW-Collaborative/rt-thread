@@ -33,9 +33,9 @@ jobs:
       fail-fast: false
       matrix:
        legs:
-         # - {UTEST: "qemu-vexpress-a9", RTT_BSP: "bsp/qemu-vexpress-a9",    QEMU_ARCH: "arm",      QEMU_MACHINE: "vexpress-a9", CONFIG_FILE: "utest_self/self.conf", SD_FILE: "sd.bin", RUN: "yes"}
+         - {UTEST: "qemu-vexpress-a9", RTT_BSP: "bsp/qemu-vexpress-a9",    QEMU_ARCH: "arm",      QEMU_MACHINE: "vexpress-a9", CONFIG_FILE: "utest_self/self.conf", SD_FILE: "sd.bin", RUN: "yes"}
          # - {UTEST: "qemu-virt64-aarch64", RTT_BSP: "bsp/qemu-virt64-aarch64", QEMU_ARCH: "aarch64",  QEMU_MACHINE: "virt",  CONFIG_FILE: "utest_self/self.conf",   SD_FILE: "sd.bin", RUN: "no"}
-         - {UTEST: "qemu-virt64-riscv", RTT_BSP: "bsp/qemu-virt64-riscv",   QEMU_ARCH: "riscv64",  QEMU_MACHINE: "virt",  CONFIG_FILE: "utest_self/self.conf",   SD_FILE: "sd.bin", RUN: "yes"}
+         - {UTEST: "qemu-virt64-riscv", RTT_BSP: "bsp/qemu-virt64-riscv",   QEMU_ARCH: "riscv64",  QEMU_MACHINE: "virt",  CONFIG_FILE: "utest_self/self.conf",   SD_FILE: "None", RUN: "yes"}
     env:
       TEST_QEMU_ARCH: ${{ matrix.legs.QEMU_ARCH }}
       TEST_QEMU_MACHINE: ${{ matrix.legs.QEMU_MACHINE }}
@@ -126,13 +126,17 @@ jobs:
       run: |
         dd if=/dev/zero of=bsp/qemu-vexpress-a9/sd.bin bs=1024 count=65536
         # qemu-system-arm -M $TEST_QEMU_MACHINE -smp cpus=2 -kernel bsp/qemu-vexpress-a9/rtthread.bin -nographic -sd bsp/qemu-vexpress-a9/sd.bin > qemu_output.log 2>&1 &
-        qemu-system-$TEST_QEMU_ARCH -nographic -M $TEST_QEMU_MACHINE -smp cpus=2 -kernel $TEST_BSP_ROOT/rtthread.bin -nographic -sd $TEST_BSP_ROOT/sd.bin > qemu_output_${TEST_QEMU_ARCH}.log 2>&1 &
-        
-        QEMU_PID=$!
-        disown $QEMU_PID
+        popd
+        if [ $TEST_SD_FILE != "None" ]; then
+          qemu-system-$TEST_QEMU_ARCH -nographic -M $TEST_QEMU_MACHINE -smp cpus=2 -kernel $TEST_BSP_ROOT/rtthread.bin -nographic -sd $TEST_BSP_ROOT/sd.bin > qemu_output_${TEST_QEMU_ARCH}.log 2>&1 &
+        else
+          qemu-system-$TEST_QEMU_ARCH -nographic -M $TEST_QEMU_MACHINE -smp cpus=2 -kernel $TEST_BSP_ROOT/rtthread.bin -nographic > qemu_output_${TEST_QEMU_ARCH}.log 2>&1 &
+        fi
+        popd
 
     - name: Monitor log for failures and qemu end
       run: |
+        popd
         FAILURE_DETECTED=false
         ERROR_LOGS=""
         
@@ -141,7 +145,6 @@ jobs:
             ERROR_LOGS="$ERROR_LOGS$line"$'\n'
             FAILURE_DETECTED=true
           fi
-    
           if [[ "$line" == *"[==========] [ utest    ] end"* ]]; then
             echo "Utest run completed. Exiting log monitoring..."
             if $FAILURE_DETECTED; then
@@ -152,4 +155,4 @@ jobs:
             break
           fi
           cat qemu_output_${TEST_QEMU_ARCH}.log
-        done
+        popd
