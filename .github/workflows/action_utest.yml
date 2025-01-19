@@ -122,23 +122,13 @@ jobs:
         scons --pyconfig-silent -C $TEST_BSP_ROOT
         scons -j$(nproc) --strict -C $TEST_BSP_ROOT
 
-    # - name: Start run Test
-    #   if: ${{matrix.legs.RUN == 'yes' && success() }}
-    #   run: |
-    #     echo $TEST_BSP_ROOT/$TEST_SD_FILE
-    #     dd if=/dev/zero of=bsp/qemu-vexpress-a9/sd.bin bs=1024 count=65536
-    #     qemu-system-arm -M $TEST_QEMU_MACHINE -smp cpus=2 -kernel bsp/qemu-vexpress-a9/rtthread.bin -nographic -sd bsp/qemu-vexpress-a9/sd.bin > qemu_output.log 2>&1 &
-    #     QEMU_PID=$!
-    #     sleep 20
-    #     kill $QEMU_PID
-    #     echo "start log read"
-    #     cat qemu_output.log
-
     - name: Start run Test
       if: ${{matrix.legs.RUN == 'yes' && success() }}
       run: |
         dd if=/dev/zero of=bsp/qemu-vexpress-a9/sd.bin bs=1024 count=65536
-        qemu-system-arm -M $TEST_QEMU_MACHINE -smp cpus=2 -kernel bsp/qemu-vexpress-a9/rtthread.bin -nographic -sd bsp/qemu-vexpress-a9/sd.bin > qemu_output.log 2>&1 &
+        # qemu-system-arm -M $TEST_QEMU_MACHINE -smp cpus=2 -kernel bsp/qemu-vexpress-a9/rtthread.bin -nographic -sd bsp/qemu-vexpress-a9/sd.bin > qemu_output.log 2>&1 &
+        qemu-system-$TEST_QEMU_ARCH -nographic -M $TEST_QEMU_MACHINE -smp cpus=2 -kernel $TEST_BSP_ROOT/rtthread.bin -nographic -sd $TEST_BSP_ROOT/sd.bin > qemu_output.log 2>&1 &
+        
         QEMU_PID=$!
         disown $QEMU_PID
 
