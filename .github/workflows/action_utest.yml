@@ -1,4 +1,4 @@
-name: AutoTestCI
+name: action_auto_utest
 
 # Controls when the action will run. Triggers the workflow on push or pull request
 # events but only for the master branch
@@ -28,7 +28,7 @@ jobs:
   test:
     runs-on: ubuntu-22.04
     name: ${{ matrix.legs.UTEST }}
-    if: github.repository_owner == 'KurisaW-Collaborative'
+    if: github.repository_owner == 'RT-Thread'
     strategy:
       fail-fast: false
       matrix:
@@ -48,9 +48,9 @@ jobs:
     - name: Install Tools
       shell: bash
       run: |
-        sudo apt-get update
-        sudo apt-get -yqq install scons qemu-system git
-        pip3 install kconfiglib
+          wget https://raw.githubusercontent.com/RT-Thread/env/master/install_ubuntu.sh
+          chmod 777 install_ubuntu.sh
+          ./install_ubuntu.sh
 
     - name: Install Arm ToolChains
       if: ${{ matrix.legs.QEMU_ARCH == 'arm' && matrix.legs.UTEST != 'rtsmart/arm' && success() }}
@@ -115,7 +115,6 @@ jobs:
         sed -i 's/-fno-exceptions/ /g' $TEST_BSP_ROOT/rtconfig.py
 
     - name: Build BSP
-      if: ${{matrix.legs.RUN == 'yes' && success() }}
       run: |
         echo CONFIG_RT_USING_UTESTCASES=y >> $TEST_BSP_ROOT/.config
         cat examples/utest/configs/$TEST_CONFIG_FILE >> $TEST_BSP_ROOT/.config
@@ -125,7 +124,6 @@ jobs:
     - name: Start run Test
       if: ${{matrix.legs.RUN == 'yes' && success() }}
       run: |
-        # qemu-system-arm -M $TEST_QEMU_MACHINE -smp cpus=2 -kernel bsp/qemu-vexpress-a9/rtthread.bin -nographic -sd bsp/qemu-vexpress-a9/sd.bin > qemu_output.log 2>&1 &
         if [ $TEST_SD_FILE != "None" ]; then
           dd if=/dev/zero of=$TEST_BSP_ROOT/sd.bin bs=1024 count=65536
           qemu-system-$TEST_QEMU_ARCH -nographic -M $TEST_QEMU_MACHINE -kernel $TEST_BSP_ROOT/rtthread.bin -nographic -sd $TEST_BSP_ROOT/sd.bin > qemu_output_${TEST_QEMU_ARCH}.log 2>&1 &
