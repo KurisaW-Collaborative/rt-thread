@@ -9,7 +9,7 @@
  */ 
 
 #include <rthw.h>
-#include <rtthread.h>
+#include <rtthread.h> 
 #include <rtdevice.h>
 
 #define DBG_TAG "Serial" 
