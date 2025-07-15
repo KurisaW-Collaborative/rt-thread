@@ -7,7 +7,7 @@
  * Date           Author       Notes
  * 2006-02-24     Bernard      first version
  * 2006-05-03     Bernard      add IRQ_DEBUG
- * 2016-08-09     ArdaFu       add interrupt enter and leave hook.
+ * 2016-08-09     ArdaFu       add interrupt enter and leave hook. 
  * 2018-11-22     Jesven       rt_interrupt_get_nest function add disable irq 
  * 2021-08-15     Supperthomas fix the comment
  * 2022-01-07     Gabriel      Moving __on_rt_xxxxx_hook to irq.c
