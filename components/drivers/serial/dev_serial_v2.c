@@ -14,7 +14,7 @@
 
 #define DBG_TAG "Serial"
 #define DBG_LVL DBG_INFO
-#include <rtdbg.h>
+#include <rtdbg.h> 
 
 #ifdef RT_SERIAL_BUF_STRATEGY_DROP
 #define RT_SERIAL_FIFO_LOCK(spinlock) ((rt_base_t)0)
