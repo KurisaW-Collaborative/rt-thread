@@ -17,7 +17,7 @@
 #include <rtdbg.h> 
 
 #ifdef RT_SERIAL_BUF_STRATEGY_DROP
-#define RT_SERIAL_FIFO_LOCK(spinlock) ((rt_base_t)0)
+#define RT_SERIAL_FIFO_LOCK(spinlock) ((rt_base_t)0) 
 #define RT_SERIAL_FIFO_UNLOCK(spinlock, level) \
     do {                                       \
         RT_UNUSED(spinlock);                   \
