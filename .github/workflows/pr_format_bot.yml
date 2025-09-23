@@ -64,7 +64,7 @@ jobs:
                 "- 设置需排除的文件/目录（目录请以\"/\"结尾）"
                 "Set files/directories to exclude (directories should end with \"/\")"
                 "- 将目标分支设置为 \ Set the target branch to：**\`${branch}\`**"
-                "- 设置PR number为 \ Set the PR number to：**\`${{ github.event.number }}\`**"
+                "- 设置PR number为 \ Set the PR number to：**\`${{ github.event.pull_request.number }}\`**"
                 ""
                 "3. **等待工作流完成 | Wait for the workflow to complete**"
                 "格式化后的代码将自动推送至你的分支。"
@@ -111,7 +111,7 @@ jobs:
                   -H "Accept: application/vnd.github.v3+json" \
                   -H "Authorization: Bearer $GITHUB_TOKEN" \
                   -d "$json_payload" \
-                  "https://api.github.com/repos/${{ github.event.pull_request.number }}/comments")
+                  "https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/comments")
               fi
 
               # 提取 HTTP 状态码和响应体
