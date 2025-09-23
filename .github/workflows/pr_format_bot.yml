@@ -45,12 +45,9 @@ jobs:
               workflow_url="https://github.com/${fork_repo}/actions/workflows/clang-format.yml"
               direct_link="${workflow_url}?branch=${branch}"
 
-              # 唯一标识符 - 用于识别此工作流的评论
-              COMMENT_IDENTIFIER="<!-- RT-Thread-Format-Notification -->"
-              
               # 使用数组存储多行消息
               message_lines=(
-                "$COMMENT_IDENTIFIER"
+                "<!-- PR Format Notification Comment -->"
                 "**👋 感谢您对 RT-Thread 的贡献！Thank you for your contribution to RT-Thread!**"
                 ""
                 "为确保代码符合 RT-Thread 的编码规范，请在你的仓库中执行以下步骤运行代码格式化工作流。"
@@ -86,49 +83,46 @@ jobs:
               echo "Message content:"
               echo "$message"
 
+              # 查找现有的 bot 评论
+              existing_comment=$(curl -s \
+                -H "Accept: application/vnd.github.v3+json" \
+                -H "Authorization: Bearer $GITHUB_TOKEN" \
+                "https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/comments" | \
+                jq -r '.[] | select(.user.login == "github-actions[bot]" and (.body | contains("<!-- PR Format Notification Comment -->"))) | {id: .id, body: .body} | @base64')
+
               # 使用 jq 安全地构建 JSON 负载
               json_payload=$(jq -n --arg body "$message" '{"body": $body}')
 
-              # 首先检查是否已存在此工作流的评论
-              existing_comments=$(curl -s \
-                -H "Accept: application/vnd.github.v3+json" \
-                -H "Authorization: Bearer $GITHUB_TOKEN" \
-                "https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/comments")
-
-              # 查找是否已存在带有标识符的评论
-              existing_comment_id=$(echo "$existing_comments" | jq -r --arg identifier "$COMMENT_IDENTIFIER" '.[] | select(.body | contains($identifier)) | .id' | head -1)
-
-              if [ -n "$existing_comment_id" ] && [ "$existing_comment_id" != "null" ]; then
-                echo "Updating existing format notification comment (ID: $existing_comment_id)"
-                
+              if [[ -n "$existing_comment" ]]; then
                 # 更新现有评论
+                comment_id=$(echo "$existing_comment" | head -1 | base64 -d | jq -r .id)
+                echo "Updating existing comment $comment_id"
                 response=$(curl -s -w "\n%{http_code}" \
                   -X PATCH \
                   -H "Accept: application/vnd.github.v3+json" \
                   -H "Authorization: Bearer $GITHUB_TOKEN" \
-                  "https://api.github.com/repos/${{ github.repository }}/issues/comments/$existing_comment_id" \
-                  -d "$json_payload")
+                  -d "$json_payload" \
+                  "https://api.github.com/repos/${{ github.repository }}/issues/comments/$comment_id")
               else
-                echo "Adding new format notification comment"
-                
-                # 发送新评论到 PR
+                # 创建新评论
+                echo "Creating new comment"
                 response=$(curl -s -w "\n%{http_code}" \
                   -X POST \
                   -H "Accept: application/vnd.github.v3+json" \
                   -H "Authorization: Bearer $GITHUB_TOKEN" \
-                  "https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/comments" \
-                  -d "$json_payload")
+                  -d "$json_payload" \
+                  "https://api.github.com/repos/${{ github.event.pull_request.number }}/comments")
               fi
 
               # 提取 HTTP 状态码和响应体
               http_code=$(echo "$response" | tail -n1)
               response_body=$(echo "$response" | sed '$d')
 
-              if [ "$http_code" -eq 200 ] || [ "$http_code" -eq 201 ]; then
-                echo "Format notification comment processed successfully"
+              if [ "$http_code" -eq 201 ] || [ "$http_code" -eq 200 ]; then
+                echo "Format notification comment added/updated successfully"
                 echo "Comment URL: $(echo "$response_body" | jq -r '.html_url')"
               else
-                echo "Failed to process comment. HTTP status: $http_code"
+                echo "Failed to add/update comment. HTTP status: $http_code"
                 echo "Response: $response_body"
                 exit 1
               fi
