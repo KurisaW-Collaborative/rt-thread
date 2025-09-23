@@ -12,6 +12,7 @@
 # 2025-07-14     kurisaW      Merge same tag with different paths, remove Path display from CI comment
 # 2025-01-23     Assistant    Added unique identifier for comment isolation
 
+
 # Script Function Description: Assign PR reviews based on the MAINTAINERS list.
 
 name: Auto Review Assistant
