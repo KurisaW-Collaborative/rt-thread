@@ -10,7 +10,6 @@
 # 2025-05-10     kurisaW      Fixed file existence, cache, and comment time issues
 # 2025-05-11     kurisaW      Fixed missing unique files creation and cache logic
 # 2025-07-14     kurisaW      Merge same tag with different paths, remove Path display from CI comment
-# 2025-01-23     Assistant    Added unique identifier for comment isolation
 
 # Script Function Description: Assign PR reviews based on the MAINTAINERS list.
 
@@ -81,22 +80,14 @@ jobs:
           echo "$changed_files" > changed_files.txt
           echo "Successfully fetched $(wc -l < changed_files.txt) changed files"
           
-          # 唯一标识符 - 用于识别此工作流的评论
-          COMMENT_IDENTIFIER="<!-- RT-Thread-Auto-Review-Assistant -->"
-          
-          # 获取现有评论，只查找包含特定标识符的评论
+          # 以下是原有的评论处理逻辑（保持不变）
           existing_comment=$(curl -s \
             -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
             "https://api.github.com/repos/${{ github.repository }}/issues/${{ steps.extract-pr.outputs.PR_NUMBER }}/comments")
             
           # Check if response is valid JSON
           if jq -e . >/dev/null 2>&1 <<<"$existing_comment"; then
-            # 只查找包含特定标识符的评论
-            existing_comment=$(jq -r --arg identifier "$COMMENT_IDENTIFIER" '
-              .[] | 
-              select(.user.login == "github-actions[bot]") | 
-              select(.body | contains($identifier)) | 
-              {body: .body} | @base64' <<< "$existing_comment")
+            existing_comment=$(jq -r '.[] | select(.user.login == "github-actions[bot]" and (.body | contains("<!-- Auto Review Assistant Comment -->"))) | {body: .body} | @base64' <<< "$existing_comment")
           else
             existing_comment=""
             echo "Warning: Invalid JSON response from GitHub API for comments"
@@ -107,7 +98,7 @@ jobs:
           if [[ ! -z "$existing_comment" ]]; then
             comment_body=$(echo "$existing_comment" | head -1 | base64 -d | jq -r .body | sed -nE 's/.*Last Updated: ([0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2} CST).*/\1/p')
             comment_time=$(TZ='Asia/Shanghai' date -d "$comment_body" +%s)
-            echo "CACHE_TIMESTAMP=${comment_time}" >> $GITHUB_OUTPUT
+            echo "CACHE_TIMESTAMP=${comment_time}" >> $GITHUB_OUTPUT  # 统一使用这个变量名
             echo "COMMENT_TIME=${comment_time}" >> $GITHUB_OUTPUT
           else
             comment_time=""
@@ -349,11 +340,8 @@ jobs:
             notified_users=$(cat unique_reviewers_bak.txt | xargs)
           fi
           current_time=$(TZ='Asia/Shanghai' date +"%Y-%m-%d %H:%M CST")
-          
-          # 唯一标识符
-          COMMENT_IDENTIFIER="<!-- RT-Thread-Auto-Review-Assistant -->"
-          
           {
+            echo "<!-- Auto Review Assistant Comment -->"
             echo "## 📌 Code Review Assignment"
             echo ""
             for tag in $unique_tags; do
@@ -408,96 +396,49 @@ jobs:
         id: post_comment
         if: steps.generate_reviewers.outputs.HAS_REVIEWERS == 'true'
         run: |
-          # 唯一标识符
-          COMMENT_IDENTIFIER="<!-- RT-Thread-Auto-Review-Assistant -->"
-          
-          # 查找现有的 bot 评论（只查找包含特定标识符的评论）
-          existing_comments=$(curl -s \
+          # 查找现有的 bot 评论
+          existing_comment=$(curl -s \
             -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-            "https://api.github.com/repos/${{ github.repository }}/issues/${{ steps.extract-pr.outputs.PR_NUMBER }}/comments")
+            "https://api.github.com/repos/${{ github.repository }}/issues/${{ steps.extract-pr.outputs.PR_NUMBER }}/comments" | \
+            jq -r '.[] | select(.user.login == "github-actions[bot]" and (.body | contains("<!-- Auto Review Assistant Comment -->"))) | {id: .id, body: .body} | @base64')
           
-          # 查找包含标识符的评论ID
-          existing_comment_id=$(echo "$existing_comments" | jq -r --arg identifier "$COMMENT_IDENTIFIER" '
-            .[] | 
-            select(.user.login == "github-actions[bot]") | 
-            select(.body | contains($identifier)) | 
-            .id' | head -1)
-          
-          # 读取评论内容
-          comment_content=$(cat review_data.md)
-          
-          if [[ -n "$existing_comment_id" ]] && [[ "$existing_comment_id" != "null" ]]; then
+          if [[ -n "$existing_comment" ]]; then
             # 更新现有评论
-            echo "Updating existing comment $existing_comment_id"
-            response=$(curl -s -w "\n%{http_code}" -X PATCH \
+            comment_id=$(echo "$existing_comment" | head -1 | base64 -d | jq -r .id)
+            echo "Updating existing comment $comment_id"
+            response=$(curl -s -X PATCH \
               -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-              -H "Accept: application/vnd.github.v3+json" \
-              -d "$(jq -n --arg body "$comment_content" '{body: $body}')" \
-              "https://api.github.com/repos/${{ github.repository }}/issues/comments/$existing_comment_id")
+              -d "$(jq -n --arg body "$(cat review_data.md)" '{body: $body}')" \
+              "https://api.github.com/repos/${{ github.repository }}/issues/comments/$comment_id")
           else
             # 创建新评论
             echo "Creating new comment"
-            response=$(curl -s -w "\n%{http_code}" -X POST \
+            response=$(curl -s -X POST \
               -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-              -H "Accept: application/vnd.github.v3+json" \
-              -d "$(jq -n --arg body "$comment_content" '{body: $body}')" \
+              -d "$(jq -n --arg body "$(cat review_data.md)" '{body: $body}')" \
               "https://api.github.com/repos/${{ github.repository }}/issues/${{ steps.extract-pr.outputs.PR_NUMBER }}/comments")
-          fi
-          
-          # 检查响应
-          http_code=$(echo "$response" | tail -n1)
-          response_body=$(echo "$response" | sed '$d')
-          
-          if [ "$http_code" -eq 200 ] || [ "$http_code" -eq 201 ]; then
-            echo "Comment processed successfully (HTTP $http_code)"
-          else
-            echo "Failed to process comment. HTTP status: $http_code"
-            echo "Response: $response_body"
-            exit 1
           fi
 
       - name: Get Comment Time
         id: get_comment_time
         if: steps.generate_reviewers.outputs.HAS_REVIEWERS == 'true'
         run: |
-          # 唯一标识符
-          COMMENT_IDENTIFIER="<!-- RT-Thread-Auto-Review-Assistant -->"
-          
-          existing_comments=$(curl -s \
+          existing_comment=$(curl -s \
             -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
             "https://api.github.com/repos/${{ github.repository }}/issues/${{ steps.extract-pr.outputs.PR_NUMBER }}/comments")
             
           # Check if response is valid JSON
-          if jq -e . >/dev/null 2>&1 <<<"$existing_comments"; then
-            # 只查找包含特定标识符的评论
-            existing_comment_body=$(echo "$existing_comments" | jq -r --arg identifier "$COMMENT_IDENTIFIER" '
-              .[] | 
-              select(.user.login == "github-actions[bot]") | 
-              select(.body | contains($identifier)) | 
-              .body' | head -1)
+          if jq -e . >/dev/null 2>&1 <<<"$existing_comment"; then
+            existing_comment=$(jq -r '.[] | select(.user.login == "github-actions[bot]" and (.body | contains("<!-- Auto Review Assistant Comment -->"))) | {body: .body} | @base64' <<< "$existing_comment")
           else
-            existing_comment_body=""
+            existing_comment=""
             echo "Warning: Invalid JSON response from GitHub API"
+            echo "Response: $existing_comment"
           fi
-          
-          if [[ -n "$existing_comment_body" ]]; then
-            comment_time=$(echo "$existing_comment_body" | sed -nE 's/.*Last Updated: ([0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2} CST).*/\1/p')
-            if [[ -n "$comment_time" ]]; then
-              timestamp=$(TZ='Asia/Shanghai' date -d "$comment_time" +%s)
-              echo "CACHE_TIMESTAMP=${timestamp}" >> $GITHUB_OUTPUT
-              echo "Debug - Found existing comment with timestamp: $comment_time -> $timestamp"
-            else
-              current_time=$(TZ='Asia/Shanghai' date +"%Y-%m-%d %H:%M CST")
-              timestamp=$(TZ='Asia/Shanghai' date -d "$current_time" +%s)
-              echo "CACHE_TIMESTAMP=${timestamp}" >> $GITHUB_OUTPUT
-              echo "Debug - Using current time for cache: $current_time -> $timestamp"
-            fi
-          else
-            current_time=$(TZ='Asia/Shanghai' date +"%Y-%m-%d %H:%M CST")
-            timestamp=$(TZ='Asia/Shanghai' date -d "$current_time" +%s)
-            echo "CACHE_TIMESTAMP=${timestamp}" >> $GITHUB_OUTPUT
-            echo "Debug - No existing comment found, using current time: $current_time -> $timestamp"
-          fi
+          comment_body="${{ steps.get_approval.outputs.CURRENT_TIME }}"
+          comment_time=$(TZ='Asia/Shanghai' date -d "$comment_body" +%s)
+          echo "CACHE_TIMESTAMP=${comment_time}" >> $GITHUB_OUTPUT  # 统一使用这个变量名
+          echo "Debug - Saving cache with timestamp: $comment_time"
           
           mkdir -p $(dirname unique_reviewers_bak.txt)
           if [[ -s unique_reviewers.txt ]]; then
