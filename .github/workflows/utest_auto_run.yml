@@ -26,43 +26,79 @@ jobs:
   test:
     runs-on: ubuntu-22.04
     name: ${{ matrix.platform.UTEST }} :${{ matrix.config_file }}
-    if: github.repository_owner == 'RT-Thread'
+    # if: github.repository_owner == 'RT-Thread'
     strategy:
       fail-fast: false
       matrix:
-        platform:
-          - { UTEST: "A9",            RTT_BSP: "bsp/qemu-vexpress-a9",      QEMU_ARCH: "arm",     QEMU_MACHINE: "vexpress-a9", SD_FILE: "sd.bin", KERNEL: "standard", "SMP_RUN":"" }
-          - { UTEST: "A9-rtsmart",    RTT_BSP: "bsp/qemu-vexpress-a9",      QEMU_ARCH: "arm",     QEMU_MACHINE: "vexpress-a9", SD_FILE: "sd.bin", KERNEL: "rtsmart",  "SMP_RUN":"" }
-          - { UTEST: "A9-smp",        RTT_BSP: "bsp/qemu-vexpress-a9",      QEMU_ARCH: "arm",     QEMU_MACHINE: "vexpress-a9", SD_FILE: "sd.bin", KERNEL: "standard",  "SMP_RUN":"smp" }
-
-          - { UTEST: "RISCV",         RTT_BSP: "bsp/qemu-virt64-riscv",     QEMU_ARCH: "riscv64", QEMU_MACHINE: "virt",        SD_FILE: "None",   KERNEL: "standard", "SMP_RUN":"" }
-          - { UTEST: "RISCV-rtsmart", RTT_BSP: "bsp/qemu-virt64-riscv",     QEMU_ARCH: "riscv64", QEMU_MACHINE: "virt",        SD_FILE: "None",   KERNEL: "rtsmart",  "SMP_RUN":"" }
-          # - { UTEST: "RISCV-smp",         RTT_BSP: "bsp/qemu-virt64-riscv",     QEMU_ARCH: "riscv64", QEMU_MACHINE: "virt",        SD_FILE: "None",   KERNEL: "standard", "SMP_RUN":"smp" }
-          - { UTEST: "XUANTIE-rtsmart",       RTT_BSP: "bsp/xuantie/virt64/c906",   QEMU_ARCH: "riscv64", QEMU_MACHINE: "virt",        SD_FILE: "sd.bin", KERNEL: "rtsmart",  "SMP_RUN":"" }
-
-          - { UTEST: "AARCH64",       RTT_BSP: "bsp/qemu-virt64-aarch64",   QEMU_ARCH: "aarch64", QEMU_MACHINE: "virt",        SD_FILE: "sd.bin", KERNEL: "standard",  "SMP_RUN":"" }
-          - { UTEST: "AARCH64-rtsmart", RTT_BSP: "bsp/qemu-virt64-aarch64", QEMU_ARCH: "aarch64", QEMU_MACHINE: "virt",        SD_FILE: "sd.bin", KERNEL: "rtsmart",  "SMP_RUN":"" }
-          # - { UTEST: "AARCH64-smp",       RTT_BSP: "bsp/qemu-virt64-aarch64",   QEMU_ARCH: "aarch64", QEMU_MACHINE: "virt",        SD_FILE: "sd.bin", KERNEL: "standard",  "SMP_RUN":"smp" }
-
-        config_file:
-          - "default.cfg"
-
+        # 定义平台配置模板
+        platform_template:
+          - name: "A9"
+            bsp: "bsp/qemu-vexpress-a9"
+            arch: "arm"
+            machine: "vexpress-a9"
+            sd_file: "sd.bin"
+            kernels: ["standard", "rtsmart"]
+            smp: ["smp"]
+            special_tests: ["kernel/object.cfg", "dfs/dfs.cfg", "cpp11/cpp11.cfg"]
+          
+          - name: "RISCV"
+            bsp: "bsp/qemu-virt64-riscv"
+            arch: "riscv64"
+            machine: "virt"
+            sd_file: "None"
+            kernels: ["standard", "rtsmart"]
+            smp: [""]
+            # smp: ["", "smp"]  # 注释掉的暂时不启用
+            special_tests: []
+          
+          - name: "XUANTIE"
+            bsp: "bsp/xuantie/virt64/c906"
+            arch: "riscv64"
+            machine: "virt"
+            sd_file: "sd.bin"
+            kernels: ["rtsmart"]
+            smp: [""]
+            special_tests: []
+          
+          - name: "AARCH64"
+            bsp: "bsp/qemu-virt64-aarch64"
+            arch: "aarch64"
+            machine: "virt"
+            sd_file: "sd.bin"
+            kernels: ["standard", "rtsmart"]
+            smp: [""]
+            # smp: ["", "smp"]  # 注释掉的暂时不启用
+            special_tests: []
+        
+        # 动态生成平台矩阵
         include:
-          # only run on qemu-vexpress-a9
-          - platform: { UTEST: "A9",            RTT_BSP: "bsp/qemu-vexpress-a9",      QEMU_ARCH: "arm",     QEMU_MACHINE: "vexpress-a9", SD_FILE: "sd.bin", KERNEL: "standard", "SMP_RUN":"" }
-            config_file: "kernel/object.cfg"
-
-          - platform: { UTEST: "A9",            RTT_BSP: "bsp/qemu-vexpress-a9",      QEMU_ARCH: "arm",     QEMU_MACHINE: "vexpress-a9", SD_FILE: "sd.bin", KERNEL: "standard", "SMP_RUN":"" }
-            config_file: "dfs/dfs.cfg"
-
-          - platform: { UTEST: "A9",            RTT_BSP: "bsp/qemu-vexpress-a9",      QEMU_ARCH: "arm",     QEMU_MACHINE: "vexpress-a9", SD_FILE: "sd.bin", KERNEL: "standard", "SMP_RUN":"" }
-            config_file: "cpp11/cpp11.cfg"
-
-          - platform: { UTEST: "A9",            RTT_BSP: "bsp/qemu-vexpress-a9",      QEMU_ARCH: "arm",     QEMU_MACHINE: "vexpress-a9", SD_FILE: "sd.bin", KERNEL: "standard", "SMP_RUN":"" }
-            config_file: "lwip/lwip.cfg"
-
-          - platform: { UTEST: "A9",            RTT_BSP: "bsp/qemu-vexpress-a9",      QEMU_ARCH: "arm",     QEMU_MACHINE: "vexpress-a9", SD_FILE: "sd.bin", KERNEL: "standard", "SMP_RUN":"" }
-            config_file: "netdev/netdev.cfg"
+          # 为每个平台模板生成标准配置
+          - ${{ each platform in matrix.platform_template }}:
+            - ${{ each kernel in platform.kernels }}:
+              - ${{ each smp in platform.smp }}:
+                platform:
+                  UTEST: "${{ platform.name }}${{ kernel != 'standard' && format('-{0}', kernel) || '' }}${{ smp != '' && format('-{0}', smp) || '' }}"
+                  RTT_BSP: "${{ platform.bsp }}"
+                  QEMU_ARCH: "${{ platform.arch }}"
+                  QEMU_MACHINE: "${{ platform.machine }}"
+                  SD_FILE: "${{ platform.sd_file }}"
+                  KERNEL: "${{ kernel }}"
+                  SMP_RUN: "${{ smp }}"
+                config_file: "default.cfg"
+          
+          # 为支持特殊测试的平台生成特殊测试配置
+          - ${{ each platform in matrix.platform_template }}:
+            - ${{ if platform.special_tests }}:
+              - ${{ each test_file in platform.special_tests }}:
+                platform:
+                  UTEST: "${{ platform.name }}"
+                  RTT_BSP: "${{ platform.bsp }}"
+                  QEMU_ARCH: "${{ platform.arch }}"
+                  QEMU_MACHINE: "${{ platform.machine }}"
+                  SD_FILE: "${{ platform.sd_file }}"
+                  KERNEL: "standard"
+                  SMP_RUN: ""
+                config_file: "${{ test_file }}"
 
     env:
       TEST_QEMU_ARCH: ${{ matrix.platform.QEMU_ARCH }}
@@ -70,6 +106,7 @@ jobs:
       TEST_BSP_ROOT: ${{ matrix.platform.RTT_BSP }}
       TEST_CONFIG_FILE: ${{ matrix.config_file }}
       TEST_SD_FILE: ${{ matrix.platform.SD_FILE }}
+    
     steps:
       - uses: actions/checkout@main
 
@@ -83,96 +120,77 @@ jobs:
       - name: Install ToolChains
         shell: bash
         run: |
+          # 工具链配置映射
+          TOOLCHAINS=(
+            # 格式: 架构:内核:工具链类型:下载URL:安装路径:前缀:环境变量标识
+            "arm:standard:gcc:https://github.com/RT-Thread/toolchains-ci/releases/download/v1.3/gcc-arm-none-eabi-10-2020-q4-major-x86_64-linux.tar.bz2:/opt/gcc-arm-none-eabi-10-2020-q4-major:arm-none-eabi-:arm"
+            "arm:rtsmart:musl:https://github.com/RT-Thread/toolchains-ci/releases/download/v1.7/arm-linux-musleabi_for_x86_64-pc-linux-gnu_stable.tar.bz2:/opt/arm-linux-musleabi_for_x86_64-pc-linux-gnu:arm-linux-musleabi-:arm-musl"
+            "riscv64:standard:gcc:https://github.com/RT-Thread/toolchains-ci/releases/download/v1.4/riscv64-unknown-elf-toolchain-10.2.0-2020.12.8-x86_64-linux-ubuntu14.tar.gz:/opt/riscv64-unknown-elf-toolchain-10.2.0-2020.12.8-x86_64-linux-ubuntu14::riscv"
+            "riscv64:rtsmart:musl:https://github.com/RT-Thread/toolchains-ci/releases/download/v1.7/riscv64-linux-musleabi_for_x86_64-pc-linux-gnu_latest.tar.bz2:/opt/riscv64-linux-musleabi_for_x86_64-pc-linux-gnu:riscv64-unknown-linux-musl-:riscv-musl"
+            "aarch64:standard:gcc:https://github.com/RT-Thread/toolchains-ci/releases/download/v1.6/gcc-arm-10.2-2020.11-x86_64-aarch64-none-elf.tar.xz:/opt/gcc-arm-10.2-2020.11-x86_64-aarch64-none-elf:aarch64-none-elf-:aarch64"
+            "aarch64:rtsmart:musl:https://github.com/RT-Thread/toolchains-ci/releases/download/v1.7/aarch64-linux-musleabi_for_x86_64-pc-linux-gnu_stable.tar.bz2:/opt/aarch64-linux-musleabi_for_x86_64-pc-linux-gnu:aarch64-linux-musleabi-:aarch64-musl"
+          )
+          
+          # 特殊工具链处理
+          XUANTIE_TOOLCHAIN="riscv64:rtsmart:xuantie:https://github.com/RT-Thread/toolchains-ci/releases/download/v1.9/Xuantie-900-gcc-linux-6.6.0-musl64-x86_64-V3.0.2.tar.gz:/opt/Xuantie-900-gcc-linux-6.6.0-musl64-x86_64-V3.0.2:riscv64-unknown-linux-musl-:riscv-musl"
+          
           TOOLCHAIN_INSTALLED=""
-
-          # Install Arm ToolChains
-          if [[ "${{ matrix.platform.QEMU_ARCH }}" == "arm" && "${{ matrix.platform.KERNEL }}" == "standard" ]]; then
-            echo "Starting install Arm ToolChains"
-            wget -q https://github.com/RT-Thread/toolchains-ci/releases/download/v1.3/gcc-arm-none-eabi-10-2020-q4-major-x86_64-linux.tar.bz2
-            sudo tar xjf gcc-arm-none-eabi-10-2020-q4-major-x86_64-linux.tar.bz2 -C /opt
-            /opt/gcc-arm-none-eabi-10-2020-q4-major/bin/arm-none-eabi-gcc --version
-            echo "RTT_EXEC_PATH=/opt/gcc-arm-none-eabi-10-2020-q4-major/bin" >> $GITHUB_ENV
-            echo "RTT_CC_PREFIX=arm-none-eabi-" >> $GITHUB_ENV
-            echo "TOOLCHAIN_INSTALLED=arm" >> $GITHUB_ENV
-          fi
-
-          # Install Arm Musl ToolChains
-          if [[ "${{ matrix.platform.QEMU_ARCH }}" == "arm" && "${{ matrix.platform.KERNEL }}" == "rtsmart" ]]; then
-            echo "Starting install Arm Musl ToolChains"
-            wget -q https://github.com/RT-Thread/toolchains-ci/releases/download/v1.7/arm-linux-musleabi_for_x86_64-pc-linux-gnu_stable.tar.bz2
-            sudo tar xjf arm-linux-musleabi_for_x86_64-pc-linux-gnu_stable.tar.bz2 -C /opt
-            /opt/arm-linux-musleabi_for_x86_64-pc-linux-gnu/bin/arm-linux-musleabi-gcc --version
-            echo "RTT_EXEC_PATH=/opt/arm-linux-musleabi_for_x86_64-pc-linux-gnu/bin" >> $GITHUB_ENV
-            echo "RTT_CC_PREFIX=arm-linux-musleabi-" >> $GITHUB_ENV
-            echo "TOOLCHAIN_INSTALLED=arm-musl" >> $GITHUB_ENV
-          fi
-
-          # Install RISC-V ToolChains
-          if [[ "${{ matrix.platform.QEMU_ARCH }}" == "riscv64" && "${{ matrix.platform.KERNEL }}" == "standard" ]]; then
-            echo "Starting install RISC-V ToolChains"
-            wget -q https://github.com/RT-Thread/toolchains-ci/releases/download/v1.4/riscv64-unknown-elf-toolchain-10.2.0-2020.12.8-x86_64-linux-ubuntu14.tar.gz
-            sudo tar zxvf riscv64-unknown-elf-toolchain-10.2.0-2020.12.8-x86_64-linux-ubuntu14.tar.gz -C /opt
-            /opt/riscv64-unknown-elf-toolchain-10.2.0-2020.12.8-x86_64-linux-ubuntu14/bin/riscv64-unknown-elf-gcc --version
-            echo "RTT_EXEC_PATH=/opt/riscv64-unknown-elf-toolchain-10.2.0-2020.12.8-x86_64-linux-ubuntu14/bin" >> $GITHUB_ENV
-            echo "TOOLCHAIN_INSTALLED=riscv" >> $GITHUB_ENV
-          fi
-
-          # Install RISC-V Musl ToolChains
-          if [[ "${{ matrix.platform.QEMU_ARCH }}" == "riscv64" && "${{ matrix.platform.KERNEL }}" == "rtsmart" ]]; then
-            echo "Starting install RISC-V Musl ToolChains"
-            wget -q https://github.com/RT-Thread/toolchains-ci/releases/download/v1.7/riscv64-linux-musleabi_for_x86_64-pc-linux-gnu_latest.tar.bz2
-            sudo tar xjf riscv64-linux-musleabi_for_x86_64-pc-linux-gnu_latest.tar.bz2 -C /opt
-            /opt/riscv64-linux-musleabi_for_x86_64-pc-linux-gnu/bin/riscv64-unknown-linux-musl-gcc --version
-            echo "RTT_EXEC_PATH=/opt/riscv64-linux-musleabi_for_x86_64-pc-linux-gnu/bin" >> $GITHUB_ENV
-            echo "RTT_CC_PREFIX=riscv64-unknown-linux-musl-" >> $GITHUB_ENV
-            echo "TOOLCHAIN_INSTALLED=riscv-musl" >> $GITHUB_ENV
-          fi
-
-          # Install RISC-V XUANTIE Musl ToolChains
-          if [[ "${{ matrix.platform.UTEST }}" == "XUANTIE-rtsmart" && "${{ matrix.platform.QEMU_ARCH }}" == "riscv64" && "${{ matrix.platform.KERNEL }}" == "rtsmart" ]]; then
+          
+          # 检查是否是玄铁平台
+          if [[ "${{ matrix.platform.UTEST }}" == "XUANTIE-rtsmart" ]]; then
+            IFS=':' read -r x_arch x_kernel x_type x_url x_path x_prefix x_env <<< "$XUANTIE_TOOLCHAIN"
             echo "Starting install RISC-V XUANTIE Musl ToolChains"
-            wget -q https://github.com/RT-Thread/toolchains-ci/releases/download/v1.9/Xuantie-900-gcc-linux-6.6.0-musl64-x86_64-V3.0.2.tar.gz
-            sudo tar zxvf Xuantie-900-gcc-linux-6.6.0-musl64-x86_64-V3.0.2.tar.gz -C /opt
-            /opt/Xuantie-900-gcc-linux-6.6.0-musl64-x86_64-V3.0.2/bin/riscv64-unknown-linux-musl-gcc --version
-            echo "RTT_EXEC_PATH=/opt/Xuantie-900-gcc-linux-6.6.0-musl64-x86_64-V3.0.2/bin" >> $GITHUB_ENV
-            echo "RTT_CC_PREFIX=riscv64-unknown-linux-musl-" >> $GITHUB_ENV
-            echo "TOOLCHAIN_INSTALLED=riscv-musl" >> $GITHUB_ENV
+            wget -q "$x_url"
+            sudo tar zxvf "$(basename $x_url)" -C /opt
+            "$x_path/bin/${x_prefix}gcc" --version
+            echo "RTT_EXEC_PATH=$x_path/bin" >> $GITHUB_ENV
+            echo "RTT_CC_PREFIX=$x_prefix" >> $GITHUB_ENV
+            echo "TOOLCHAIN_INSTALLED=$x_env" >> $GITHUB_ENV
+          else
+            # 普通工具链安装
+            for toolchain in "${TOOLCHAINS[@]}"; do
+              IFS=':' read -r arch kernel type url path prefix env <<< "$toolchain"
+              
+              if [[ "${{ matrix.platform.QEMU_ARCH }}" == "$arch" && "${{ matrix.platform.KERNEL }}" == "$kernel" ]]; then
+                echo "Starting install $arch $kernel ToolChains"
+                wget -q "$url"
+                
+                # 根据文件扩展名选择解压方式
+                if [[ "$url" == *.tar.bz2 ]]; then
+                  sudo tar xjf "$(basename $url)" -C /opt
+                elif [[ "$url" == *.tar.gz ]]; then
+                  sudo tar zxvf "$(basename $url)" -C /opt
+                elif [[ "$url" == *.tar.xz ]]; then
+                  sudo tar -xvJf "$(basename $url)" -C /opt
+                fi
+                
+                # 验证安装
+                if [[ -n "$prefix" ]]; then
+                  "$path/bin/${prefix}gcc" --version
+                else
+                  # 对于没有前缀的工具链（如riscv标准版）
+                  find "$path/bin" -name "*gcc" | head -1 | xargs --version
+                fi
+                
+                echo "RTT_EXEC_PATH=$path/bin" >> $GITHUB_ENV
+                if [[ -n "$prefix" ]]; then
+                  echo "RTT_CC_PREFIX=$prefix" >> $GITHUB_ENV
+                fi
+                echo "TOOLCHAIN_INSTALLED=$env" >> $GITHUB_ENV
+                break
+              fi
+            done
           fi
-
-          # Install AARCH64 ToolChains
-          if [[ "${{ matrix.platform.QEMU_ARCH }}" == "aarch64" && "${{ matrix.platform.KERNEL }}" == "standard" ]]; then
-            echo "Starting install AARCH64 ToolChains"
-            wget -q https://github.com/RT-Thread/toolchains-ci/releases/download/v1.6/gcc-arm-10.2-2020.11-x86_64-aarch64-none-elf.tar.xz
-            sudo tar -xvJf gcc-arm-10.2-2020.11-x86_64-aarch64-none-elf.tar.xz -C /opt
-            /opt/gcc-arm-10.2-2020.11-x86_64-aarch64-none-elf/bin/aarch64-none-elf-gcc --version
-            echo "RTT_EXEC_PATH=/opt/gcc-arm-10.2-2020.11-x86_64-aarch64-none-elf/bin" >> $GITHUB_ENV
-            echo "RTT_CC_PREFIX=aarch64-none-elf-" >> $GITHUB_ENV
-            echo "TOOLCHAIN_INSTALLED=aarch64" >> $GITHUB_ENV
-          fi
-
-          # Install AARCH64 Musl ToolChains
-          if [[ "${{ matrix.platform.QEMU_ARCH }}" == "aarch64" && "${{ matrix.platform.KERNEL }}" == "rtsmart" ]]; then
-            echo "Starting install AARCH64 Musl ToolChains"
-            wget -q https://github.com/RT-Thread/toolchains-ci/releases/download/v1.7/aarch64-linux-musleabi_for_x86_64-pc-linux-gnu_stable.tar.bz2
-            sudo tar xjf aarch64-linux-musleabi_for_x86_64-pc-linux-gnu_stable.tar.bz2 -C /opt
-            /opt/aarch64-linux-musleabi_for_x86_64-pc-linux-gnu/bin/aarch64-linux-musleabi-gcc --version
-            echo "RTT_EXEC_PATH=/opt/aarch64-linux-musleabi_for_x86_64-pc-linux-gnu/bin" >> $GITHUB_ENV
-            echo "RTT_CC_PREFIX=aarch64-linux-musleabi-" >> $GITHUB_ENV
-            echo "TOOLCHAIN_INSTALLED=aarch64-musl" >> $GITHUB_ENV
-          fi
-
-          # Install CPP11 Preprocessing Toolchain
+          
+          # C++11 特殊处理
           if [[ "${{ matrix.platform.QEMU_ARCH }}" == "arm" && "${{ matrix.config_file }}" == "cpp11/cpp11.cfg" && "${{ matrix.platform.KERNEL }}" == "standard" ]]; then
-            sudo rm -f /opt/gcc-arm-none-eabi-10-2020-q4-major/arm-none-eabi/include/c++/10.2.1/thread
-            sudo rm -f /opt/gcc-arm-none-eabi-10-2020-q4-major/arm-none-eabi/include/c++/10.2.1/mutex
-            sudo rm -f /opt/gcc-arm-none-eabi-10-2020-q4-major/arm-none-eabi/include/c++/10.2.1/condition_variable
-            sudo rm -f /opt/gcc-arm-none-eabi-10-2020-q4-major/arm-none-eabi/include/c++/10.2.1/future
+            sudo rm -f /opt/gcc-arm-none-eabi-10-2020-q4-major/arm-none-eabi/include/c++/10.2.1/{thread,mutex,condition_variable,future}
             sudo rm -f /opt/gcc-arm-none-eabi-10-2020-q4-major/arm-none-eabi/include/pthread.h
             sudo cat /dev/null > /opt/gcc-arm-none-eabi-10-2020-q4-major/arm-none-eabi/include/sys/_pthreadtypes.h
             sed -i 's/-fno-exceptions/ /g' $TEST_BSP_ROOT/rtconfig.py
           fi
-
-          if [ "$TOOLCHAIN_INSTALLED" == "None" ]; then
+          
+          if [[ -z "$TOOLCHAIN_INSTALLED" ]]; then
             echo "No valid toolchain installed, stopping the workflow."
           fi
 
@@ -224,7 +242,6 @@ jobs:
 
             for lib in $missing_libs; do
               base_lib=$(echo "$lib" | sed -E 's/\.so.*/\.so/')
-
               echo "🔍 修复基础库：$base_lib ..."
               sudo ln -s /usr/lib/x86_64-linux-gnu/$base_lib  /usr/lib/x86_64-linux-gnu/$lib
             done
