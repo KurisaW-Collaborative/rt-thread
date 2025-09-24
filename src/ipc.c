@@ -3,7 +3,7 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  *
- * Change Logs:
+ * Change Logs: 
  * Date           Author       Notes
  * 2006-03-14     Bernard      the first version
  * 2006-04-25     Bernard      implement semaphore
