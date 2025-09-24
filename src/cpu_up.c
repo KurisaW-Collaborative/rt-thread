@@ -13,7 +13,7 @@
 #include <rtthread.h>
  
 static struct rt_cpu _cpu;
-
+ 
 /**
  * @addtogroup group_thread_comm
  *
