@@ -4,20 +4,20 @@
  * SPDX-License-Identifier: Apache-2.0
  *
  * Change Logs:
- * Date           Author       Notes
- * 2021-06-01     KyleChan     first version
- */
+ * Date           Author       Notes 
+ * 2021-06-01     KyleChan     first version 
+ */  
 
 #include <rthw.h>
-#include <rtthread.h>
+#include <rtthread.h>  
 #include <rtdevice.h>
 
-#define DBG_TAG "Serial"
+#define DBG_TAG "Serial" 
 #define DBG_LVL DBG_INFO
-#include <rtdbg.h>
+#include <rtdbg.h> 
 
 #ifdef RT_SERIAL_BUF_STRATEGY_DROP
-#define RT_SERIAL_FIFO_LOCK(spinlock) ((rt_base_t)0)
+#define RT_SERIAL_FIFO_LOCK(spinlock) ((rt_base_t)0)  
 #define RT_SERIAL_FIFO_UNLOCK(spinlock, level) \
     do {                                       \
         RT_UNUSED(spinlock);                   \

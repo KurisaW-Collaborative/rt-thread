@@ -169,7 +169,7 @@ owners: Huanyi Mai(Maihuanyi)<m19825309307@163.com>
 
 tag: components
 path: components
-owners: Huanyi Mai(Maihuanyi)<m19825309307@163.com>
+owners: Yuqiang Wang(kurisaW)<2053731441@qq.com>
 
 tag: components_driver_can
 path: components/drivers/can
@@ -187,7 +187,7 @@ tag: components_driver_serial_v2
 path: components/drivers/serial/dev_serial_v2.c
 path: components/drivers/include/drivers/dev_serial_v2.h
 path: examples/utest/testcases/drivers/serial_v2
-owners: Chen Beidou(Ryan-CW-Code)<1831931681@qq.com>
+owners: Jiu Wang(Nedki-L)<825538844@qq.com>
 
 tag: components_driver_spi
 path: components/drivers/spi
